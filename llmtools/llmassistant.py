@@ -1,4 +1,6 @@
 from llmtools.functions.outputmessagefunction import OutputMessageLLMFunction
+from llmtools.functions.runcommandfunction import RunCommandLLMFunction
+from llmtools.basic.promptinput import get_user_input
 
 from openai import OpenAI
 import os
@@ -22,7 +24,7 @@ def get_chatgpt_output(user_input="Hello world!", messages=None, functions=None)
 
 class LLMAssistant:
     def __init__(self):
-        self.functions = [OutputMessageLLMFunction()]
+        self.functions = [OutputMessageLLMFunction(), RunCommandLLMFunction()]
         self.is_chat_running = False
 
     def get_functions(self):
@@ -45,13 +47,10 @@ class LLMAssistant:
                 print("Function not found: " + str(target_function_call))
 
     def run(self):
-        from prompt_toolkit import PromptSession
-        prompt_session = PromptSession()
-
         self.is_chat_running = True
         while self.is_chat_running:
             prompt_message_to_user = self.get_prompt_message_to_user()
-            prompt = prompt_session.prompt(prompt_message_to_user)
+            prompt = get_user_input(prompt_message_to_user)
             prompt = self.postprocess_prompt(prompt)
             if self.verify_prompt(prompt):
                 self.run_prompt(prompt)
@@ -66,7 +65,7 @@ class LLMAssistant:
         if prompt == "debug":
             import pdb; pdb.set_trace()
             return True
-        if prompt in ["exit", "quit", "finish"]:
+        if prompt in ["exit", "quit", "finish", "q"]:
             print("Exiting chat.")
             self.is_chat_running = False
             return False
