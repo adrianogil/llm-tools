@@ -1,5 +1,6 @@
 from llmtools.functions.outputmessagefunction import OutputMessageLLMFunction
 from llmtools.functions.runcommandfunction import RunCommandLLMFunction
+from llmtools.functions.createfilefunction import CreateFileLLMFunction
 from llmtools.basic.promptinput import get_user_input
 
 from openai import OpenAI
@@ -24,7 +25,11 @@ def get_chatgpt_output(user_input="Hello world!", messages=None, functions=None)
 
 class LLMAssistant:
     def __init__(self):
-        self.functions = [OutputMessageLLMFunction(), RunCommandLLMFunction()]
+        self.functions = [
+            OutputMessageLLMFunction(),
+            RunCommandLLMFunction(),
+            CreateFileLLMFunction(),
+        ]
         self.is_chat_running = False
 
     def get_functions(self):
