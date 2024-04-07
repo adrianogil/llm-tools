@@ -1,0 +1,5 @@
+{
+    "DIR_MACRO": "LLM_TOOLS_DIR",
+    "PROJECT_NAME": "llm-tools",
+    "BASHRC": "bashrc.sh"
+}
