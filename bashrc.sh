@@ -1,0 +1,6 @@
+
+if [ -z "$LLM_TOOLS_PYTHON_DIR" ]
+then
+    export LLM_TOOLS_PYTHON_DIR=$LLM_TOOLS_DIR/src/
+    export PYTHONPATH=$LLM_TOOLS_PYTHON_DIR:$PYTHONPATH
+fi
