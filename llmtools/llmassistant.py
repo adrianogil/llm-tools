@@ -31,6 +31,7 @@ class LLMAssistant:
             CreateFileLLMFunction(),
         ]
         self.is_chat_running = False
+        self.debug_mode = False
 
     def get_functions(self):
         llm_functions = []
@@ -39,7 +40,12 @@ class LLMAssistant:
         return llm_functions
 
     def run_prompt(self, prompt):
-        self.last_completion = get_chatgpt_output(user_input=prompt, functions=self.get_functions())
+        if self.debug_mode:
+            print("Running prompt: " + str(prompt))
+        chatgpt_functions = self.get_functions()
+        if self.debug_mode:
+            print(chatgpt_functions)
+        self.last_completion = get_chatgpt_output(user_input=prompt, functions=chatgpt_functions)
         if self.last_completion.choices[0].message.function_call is None:
             print(self.last_completion.choices[0].message.content)
         else:
@@ -56,12 +62,13 @@ class LLMAssistant:
         while self.is_chat_running:
             prompt_message_to_user = self.get_prompt_message_to_user()
             prompt = get_user_input(prompt_message_to_user)
-            prompt = self.postprocess_prompt(prompt)
+            prompt = prompt.strip()
             if self.verify_prompt(prompt):
+                prompt = self.postprocess_prompt(prompt)
                 self.run_prompt(prompt)
 
     def postprocess_prompt(self, prompt):
-        return prompt.strip()
+        return prompt
 
     def get_prompt_message_to_user(self):
         return "User: "
@@ -69,7 +76,7 @@ class LLMAssistant:
     def verify_prompt(self, prompt):
         if prompt == "debug":
             import pdb; pdb.set_trace()
-            return True
+            return False
         if prompt in ["exit", "quit", "finish", "q"]:
             print("Exiting chat.")
             self.is_chat_running = False
