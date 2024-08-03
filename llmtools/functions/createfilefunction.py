@@ -1,5 +1,6 @@
 from .llmfunction import LLMFunction
 
+from pyutils.utils.userinput import get_user_input
 from pydantic import BaseModel, Field
 
 import platform
@@ -28,6 +29,11 @@ class CreateFileLLMFunction(LLMFunction):
 
     def run_function(self, llmassistant, arguments):
         createfile_command_data = CreateFileCommand(**json.loads(arguments))
+
+        consent = get_user_input(f"Do you want to create the file {createfile_command_data.fileName}? (y/n)")
+        if consent.lower() != "y":
+            print("Operation canceled")
+            return
 
         with open(createfile_command_data.fileName, "w") as file:
             file.write(createfile_command_data.fileContent)
