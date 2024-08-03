@@ -1,7 +1,6 @@
 from .llmfunction import LLMFunction
 
-from llmtools.basic.promptinput import get_user_input
-
+from pyutils.utils.userinput import get_user_input
 from pyutils.cli.clitools import run_cmd
 from pydantic import BaseModel, Field
 
