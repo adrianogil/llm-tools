@@ -7,17 +7,40 @@ import llmtools.preprocessors.linktextfile as linktextfile
 from pyutils.utils.userinput import get_user_input
 
 from openai import OpenAI
+import base64
 import os
 
 client = OpenAI(
     api_key=os.environ["CHATGPT_API_KEY"],
 )
 
-def get_chatgpt_output(user_input="Hello world!", messages=None, functions=None, model='gpt-4o-mini'):
+def get_chatgpt_output(user_input="Hello world!", messages=None, functions=None, model='gpt-4o-mini', attached_images=None):
     if not messages:
         messages = []
-    messages.append({"role": "user", "content": user_input})
-    completion = client.chat.completions.create(
+    if attached_images:
+        content_data = [
+        {
+          "type": "text",
+          "text": user_input
+        },
+        ]
+        for image_path in attached_images:
+            base64_image = None
+            with open(image_path, "rb") as image_file:
+                base64_image = base64.b64encode(image_file.read()).decode('utf-8')
+            content_data.append(
+                {
+                  "type": "image_url",
+                  "image_url": {
+                       "url": f"data:image/jpeg;base64,{base64_image}"
+                  }
+                }
+            )
+        messages.append({"role": "user", "content": content_data})
+    else:
+        messages.append({"role": "user", "content": user_input})
+    print(model)
+    completion = client.beta.chat.completions.parse(
         model=model,
         messages=messages,
         functions=functions,
@@ -45,18 +68,24 @@ class LLMAssistant:
             llm_functions.append(registered_function.get_function_metadata())
         return llm_functions
 
-    def run_prompt(self, prompt, preprocess_enable=True):
+    def run_prompt(self, prompt, preprocess_enable=True, attached_images=None):
         chatgpt_functions = self.get_functions()
+
         # if self.debug_mode:
         #     print(chatgpt_functions)
-
         if preprocess_enable:
-            prompt = self.preprocess_prompt(prompt)
+            preprocess_data = self.preprocess_prompt(prompt)
+            print(preprocess_data)
+            prompt = preprocess_data.get("prompt", prompt)
+            if "attached_images" in preprocess_data:
+                if not attached_images:
+                    attached_images = []
+                attached_images.extend(preprocess_data["attached_images"])
 
         if self.debug_mode:
             print("Running prompt: " + str(prompt))
 
-        self.last_completion = get_chatgpt_output(user_input=prompt, functions=chatgpt_functions)
+        self.last_completion = get_chatgpt_output(user_input=prompt, functions=chatgpt_functions, attached_images=attached_images)
 
         if self.last_completion.choices[0].message.function_call is None:
             print(self.last_completion.choices[0].message.content)
@@ -84,11 +113,20 @@ class LLMAssistant:
 
     def preprocess_prompt(self, prompt):
         # print("Preprocessing prompt")
+
+        prompt_data = {
+            "prompt": prompt,
+            "attached_images": []
+        }
+
         for preprocess_prompt_function in self.prompt_preprocessors:
             if self.debug_mode:
                 print("Running preprocess function: " + str(preprocess_prompt_function))
-            prompt = preprocess_prompt_function(prompt)
-        return prompt
+            preprocess_data = preprocess_prompt_function(prompt_data["prompt"])
+            prompt_data["prompt"] = preprocess_data["prompt"]
+            if "attached_images" in preprocess_data:
+                prompt_data["attached_images"].extend(preprocess_data["attached_images"])
+        return prompt_data
 
     def get_prompt_message_to_user(self):
         return "User: "
