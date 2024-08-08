@@ -6,6 +6,8 @@ from pydantic import BaseModel, Field
 
 import platform
 import json
+import os
+import random
 
 
 class RunCommand(BaseModel):
@@ -35,8 +37,17 @@ class RunCommandLLMFunction(LLMFunction):
         print("Description:")
         print(run_command_data.description)
 
-        user_confirmation = get_user_input("Do you want to run this command? (y/n): ")
-        user_confirmation = user_confirmation.strip()
+        def save_command_to_file(command):
+            file_path = "/temp/command.sh"
+            file_name = f"command_{random.randint(1, 100)}.sh"
+            file_path = os.path.join("/temp", file_name)
+            with open(file_path, "w") as file:
+                file.write(command)
+            print(f"Command saved to file: {file_path}")
+
+        save_command_to_file(run_command_data.command)
+
+        user_confirmation = get_user_input("Do you want to run this command? (y/n): ").strip()
 
         if user_confirmation.lower() == "y":
             print(f"> {run_command_data.command}")
@@ -44,4 +55,4 @@ class RunCommandLLMFunction(LLMFunction):
             print(cmd_ouput)
             print("Command ran successfully")
         else:
-            print("Command not ran")
+            print("Operation canceled")
