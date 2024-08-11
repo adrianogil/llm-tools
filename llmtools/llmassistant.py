@@ -1,6 +1,7 @@
 from llmtools.functions.outputmessagefunction import OutputMessageLLMFunction
 from llmtools.functions.runcommandfunction import RunCommandLLMFunction
 from llmtools.functions.createfilefunction import CreateFileLLMFunction
+from llmtools.functions.multistepplanfunction import MultiStepPlanLLMFunction
 
 import llmtools.preprocessors.linktextfile as linktextfile
 
@@ -11,7 +12,7 @@ import base64
 import os
 
 client = OpenAI(
-    api_key=os.environ["CHATGPT_API_KEY"],
+    api_key=os.environ["CHATGPT_SECRET_API_KEY"],
 )
 
 def get_chatgpt_output(user_input="Hello world!", messages=None, functions=None, model='gpt-4o-mini', attached_images=None):
@@ -55,6 +56,7 @@ class LLMAssistant:
             OutputMessageLLMFunction(),
             RunCommandLLMFunction(),
             CreateFileLLMFunction(),
+            MultiStepPlanLLMFunction()
         ]
         self.prompt_preprocessors = [
             linktextfile.preprocess_prompt
@@ -70,7 +72,6 @@ class LLMAssistant:
 
     def run_prompt(self, prompt, preprocess_enable=True, attached_images=None):
         chatgpt_functions = self.get_functions()
-
         # if self.debug_mode:
         #     print(chatgpt_functions)
         if preprocess_enable:
